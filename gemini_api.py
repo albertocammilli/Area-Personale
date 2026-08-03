@@ -7,7 +7,7 @@ client = genai.Client()
 def get_response_ai(prompt, param, parent_widget=None):
     try:
         response = client.models.generate_content(
-            model='gemini-3.1-flash-lite',
+            model='gemini-3.5-flash-lite',
             contents=prompt,
             config=types.GenerateContentConfig(system_instruction=param),
         )

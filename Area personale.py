@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from customtkinter import CTkFrame, CTkTextbox
+from tkinter import filedialog
 from PIL import Image
 import threading
 from pathlib import Path
@@ -419,6 +420,25 @@ class WordCounter:
 
 class FileManager:
     def __init__(self, parent):
+        # path of the script
+        self.script_dir = Path(__file__).parent
+        # current directory
+        self.current = None
+
+        self.path_cartella_personale = self.script_dir / "Personal"
+        self.path_cartella_scuola = self.script_dir / "School"
+        self.path_cartella_altro = self.script_dir / "Other"
+
+        self.cartelle = (self.path_cartella_personale,
+                         self.path_cartella_scuola,
+                         self.path_cartella_altro)
+
+        for cartella in self.cartelle:
+            if cartella.exists():
+                pass
+            else:
+                cartella.mkdir(parents=True, exist_ok=True)
+
         self.frame = CTkFrame(
             parent,
             fg_color="#1e1e1e",
@@ -445,8 +465,9 @@ class FileManager:
         # filters
         self.filter_options = ctk.CTkSegmentedButton(
             self.frame,
-            values=["scuola", "personale", "altro"],
+            values=["school", "personal", "other"],
             font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"),
+            command=self.change_current
         )
         for btn in self.filter_options._buttons_dict.values():
             btn.configure(width=140)
@@ -460,6 +481,64 @@ class FileManager:
             width=160
         )
         self.tags_combobox.place(relx=1, rely=0.15, anchor="ne")
+
+        # add file/move
+        self.add_button = ctk.CTkButton(self.frame,
+                                        text="+",
+                                        fg_color="lime",
+                                        hover_color="green",
+                                        width=40,
+                                        height=40,
+                                        font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"),
+                                        command=self.select_file)
+
+        self.add_button.place(relx=0.93, rely=0.87)
+
+        # scrollable frame
+        self.files_scrollable_frame = ctk.CTkScrollableFrame(self.frame,
+                                                             width=560,
+                                                             height=200)
+        self.files_scrollable_frame.place(relx=0.51, rely=0.55, anchor="center")
+
+        self.files_scrollable_frame.grid_columnconfigure(0, weight=1)
+        self.files_scrollable_frame.grid_rowconfigure(1, weight=0)
+
+    def show_files(self):
+        for widget in self.files_scrollable_frame.winfo_children():
+            widget.destroy() #before doing stuff remember to defaut to youtube at the start fixme
+
+        for i, file in enumerate(self.current.iterdir()):
+            if file.is_file():
+                label = ctk.CTkLabel(self.files_scrollable_frame, text=file.name, anchor="nw", height=20,
+                                     font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"))
+                label.grid(row=i, column=0, sticky="nw", pady=2, padx=5)
+                button = ctk.CTkButton(self.files_scrollable_frame,
+                                       text="open",
+                                       fg_color="#b38600",
+                                       hover_color="orange",
+                                       width=40,
+                                       height=20,
+                                       font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"),
+                                       )
+                button.grid(row=i, column=1, sticky="nw", pady=2, padx=5)
+
+    def change_current(self, value: str):
+        if value == "school":
+            self.current = self.path_cartella_scuola
+        elif value == "personal":
+            self.current = self.path_cartella_personale
+        else:
+            self.current = self.path_cartella_altro
+        self.show_files()
+
+    def select_file(self):
+        if self.current is not None:
+            file = Path(filedialog.askopenfilename(title="select a file"))
+            destinazione = self.current / file.name
+            file.rename(destinazione)
+            self.show_files()
+        else:
+            pass
 
     def show(self):
         self.frame.place(relx=0.015, rely=0.015, relwidth=0.97, relheight=0.97)
@@ -529,9 +608,9 @@ class AreaPersonale(ctk.CTk):
             # Carica i file dal disco nel thread secondario
             img_yt = ctk.CTkImage(light_image=Image.open(
                 Path(__file__).resolve().parent / "assets" / "images" / "hard-drive-download.png"),
-                                  dark_image=Image.open(Path(
-                                      __file__).resolve().parent / "assets" / "images" / "hard-drive-download.png"),
-                                  size=(18, 18))
+                dark_image=Image.open(Path(
+                    __file__).resolve().parent / "assets" / "images" / "hard-drive-download.png"),
+                size=(18, 18))
             img_file = ctk.CTkImage(
                 light_image=Image.open(Path(__file__).resolve().parent / "assets" / "images" / "folder-check.png"),
                 dark_image=Image.open(Path(__file__).resolve().parent / "assets" / "images" / "folder-check.png"),
@@ -544,10 +623,13 @@ class AreaPersonale(ctk.CTk):
                 light_image=Image.open(Path(__file__).resolve().parent / "assets" / "images" / "clapperboard.png"),
                 dark_image=Image.open(Path(__file__).resolve().parent / "assets" / "images" / "clapperboard.png"),
                 size=(18, 18))
-            img_notes = ctk.CTkImage(light_image=Image.open(Path(__file__).resolve().parent / "assets" / "images" / "link.png"),
-                                     dark_image=Image.open(Path(__file__).resolve().parent / "assets" / "images" / "link.png"), size=(18, 18))
-            img_task = ctk.CTkImage(light_image=Image.open(Path(__file__).resolve().parent / "assets" / "images" / "cpu.png"),
-                                    dark_image=Image.open(Path(__file__).resolve().parent / "assets" / "images" / "cpu.png"), size=(18, 18))
+            img_notes = ctk.CTkImage(
+                light_image=Image.open(Path(__file__).resolve().parent / "assets" / "images" / "link.png"),
+                dark_image=Image.open(Path(__file__).resolve().parent / "assets" / "images" / "link.png"),
+                size=(18, 18))
+            img_task = ctk.CTkImage(
+                light_image=Image.open(Path(__file__).resolve().parent / "assets" / "images" / "cpu.png"),
+                dark_image=Image.open(Path(__file__).resolve().parent / "assets" / "images" / "cpu.png"), size=(18, 18))
 
             # Assegna le immagini alle etichette in modo sicuro sul thread principale
             self.after(0, lambda: self.yt_downloader_label.configure(image=img_yt))
@@ -850,7 +932,7 @@ def import_libraries_heavy():
     import gemini_api as _gemini_api
     ytd = _ytd
     gemini_api = _gemini_api
-    get_response_ai = _gemini_api.get_response_ai  # FIXME per qualche motivo queste librerie qua in fondo non funzionano quando uso tipo grammar fix
+    get_response_ai = _gemini_api.get_response_ai
 
 
 if __name__ == "__main__":
