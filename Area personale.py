@@ -430,7 +430,7 @@ class FileManager:
         self.current = None
 
         #extentions present
-        self.extensions=("extensions...", )
+        self.extensions=set()
 
         #filtered files, temporary list
         self.filtered_files=[]
@@ -486,12 +486,13 @@ class FileManager:
         # tags
         self.tags_combobox = ctk.CTkComboBox(
             self.frame,
-            values=list(self.extensions),
+            values=["all"]+list(self.extensions),
             font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"),
             width=160,
             command=self.filter_files
         )
         self.tags_combobox.place(relx=1, rely=0.15, anchor="ne")
+        self.tags_combobox.set("all")
 
         # add file/move
         self.add_button = ctk.CTkButton(self.frame,
@@ -514,8 +515,19 @@ class FileManager:
                                         height=30,
                                         font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"),
                                         command=lambda: os.startfile(self.current))
-
         self.directory_button.place(relx=0.02, rely=0.87)
+
+        #refresh
+        self.refresh_button = ctk.CTkButton(self.frame,
+                                              text="⟳",
+                                              fg_color="#424242",
+                                              hover_color="#616161",
+                                              width=30,
+                                              height=30,
+                                              font=ctk.CTkFont(family="Tahoma", size=20, slant="roman"),
+                                              command=lambda: self.show_files())
+
+        self.refresh_button.place(relx=0.21, rely=0.87)
 
         # scrollable frame
         self.files_scrollable_frame = ctk.CTkScrollableFrame(self.frame,
@@ -527,6 +539,7 @@ class FileManager:
         self.files_scrollable_frame.grid_rowconfigure(1, weight=0)
 
     def show_files(self):
+        self.files.clear()
         for widget in self.files_scrollable_frame.winfo_children():
             widget.destroy()
 
@@ -542,18 +555,22 @@ class FileManager:
                                        width=40,
                                        height=20,
                                        font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"),
-                                       command=lambda idx=i: self.open_file(idx)
+                                       command=lambda idx=i: self.open_file(idx, False)
                                        )
                 button.grid(row=i, column=1, sticky="nw", pady=2, padx=5)
                 self.files.append(file)
-                self.extensions += (file.suffix,)
-                self.tags_combobox.configure(values=list(self.extensions))
-                print(self.files)
+                self.extensions.add(file.suffix)
+                print("f{self.files}\n\n")
+        self.tags_combobox.configure(values=["all"]+list(self.extensions))
 
 
-    def open_file(self, num):
-        print(num)
-        os.startfile(self.files[num])
+
+    def open_file(self, num, filtered):
+        if not filtered:
+            print(num)
+            os.startfile(self.files[num])
+        else:
+            os.startfile(self.filtered_files[num])
 
 
     def change_current(self, value: str):
@@ -570,19 +587,38 @@ class FileManager:
             file = Path(filedialog.askopenfilename(title="select a file"))
             destinazione = self.current / file.name
             file.rename(destinazione)
+            self.files.append(file)
             self.show_files()
         else:
             pass
 
 
     def filter_files(self, value):
-        if value=="extensions...":
+        if value=="all":
             self.show_files()
         else:
+            self.filtered_files.clear()
             for file in self.files:
-                pass
+                if file.suffix == value:
+                    self.filtered_files.append(file)
+                    print(len(self.filtered_files))
+            for widget in self.files_scrollable_frame.winfo_children():
+                widget.destroy()
 
+            for i, file in enumerate(self.filtered_files):
 
+                    label = ctk.CTkLabel(self.files_scrollable_frame, text=file.name, anchor="nw", height=20,
+                                         font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"))
+                    label.grid(row=i, column=0, sticky="nw", pady=2, padx=5)
+                    button = ctk.CTkButton(self.files_scrollable_frame,
+                                           text="open",
+                                           fg_color="#b38600",
+                                           hover_color="orange",
+                                           width=40,
+                                           height=20,
+                                           font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"),
+                                           command=lambda idx=i: self.open_file(idx, True))
+                    button.grid(row=i, column=1, sticky="nw", pady=2, padx=5)
 
 
 
