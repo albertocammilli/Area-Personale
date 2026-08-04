@@ -25,7 +25,7 @@ class YtDownloader:
                                    corner_radius=10,
                                    command=self.thread_make)
         self.insert = ctk.CTkLabel(self.frame,
-                                   text="Incolla il link qui. Puoi aggiungerne più di uno.",
+                                   text="Paste your link here. You can add more than one",
                                    font=ctk.CTkFont(family='Tahoma', size=15, weight="normal", slant="roman"))
         self.options = ctk.CTkComboBox(self.frame,
                                        values=["MP4 Video (Best Quality)", "MP4 Video (Low Quality, 720p)"],
@@ -422,8 +422,18 @@ class FileManager:
     def __init__(self, parent):
         # path of the script
         self.script_dir = Path(__file__).parent
+
+        #files
+        self.files=[]
+
         # current directory
         self.current = None
+
+        #extentions present
+        self.extensions=("extensions...", )
+
+        #filtered files, temporary list
+        self.filtered_files=[]
 
         self.path_cartella_personale = self.script_dir / "Personal"
         self.path_cartella_scuola = self.script_dir / "School"
@@ -476,9 +486,10 @@ class FileManager:
         # tags
         self.tags_combobox = ctk.CTkComboBox(
             self.frame,
-            values=["Tags..."],
+            values=list(self.extensions),
             font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"),
-            width=160
+            width=160,
+            command=self.filter_files
         )
         self.tags_combobox.place(relx=1, rely=0.15, anchor="ne")
 
@@ -494,6 +505,18 @@ class FileManager:
 
         self.add_button.place(relx=0.93, rely=0.87)
 
+        #open directory button
+        self.directory_button = ctk.CTkButton(self.frame,
+                                        text="open directory",
+                                        fg_color="#424242",
+                                        hover_color="#616161",
+                                        width=40,
+                                        height=30,
+                                        font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"),
+                                        command=lambda: os.startfile(self.current))
+
+        self.directory_button.place(relx=0.02, rely=0.87)
+
         # scrollable frame
         self.files_scrollable_frame = ctk.CTkScrollableFrame(self.frame,
                                                              width=560,
@@ -505,7 +528,7 @@ class FileManager:
 
     def show_files(self):
         for widget in self.files_scrollable_frame.winfo_children():
-            widget.destroy() #before doing stuff remember to defaut to youtube at the start fixme
+            widget.destroy()
 
         for i, file in enumerate(self.current.iterdir()):
             if file.is_file():
@@ -519,8 +542,19 @@ class FileManager:
                                        width=40,
                                        height=20,
                                        font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"),
+                                       command=lambda idx=i: self.open_file(idx)
                                        )
                 button.grid(row=i, column=1, sticky="nw", pady=2, padx=5)
+                self.files.append(file)
+                self.extensions += (file.suffix,)
+                self.tags_combobox.configure(values=list(self.extensions))
+                print(self.files)
+
+
+    def open_file(self, num):
+        print(num)
+        os.startfile(self.files[num])
+
 
     def change_current(self, value: str):
         if value == "school":
@@ -539,6 +573,20 @@ class FileManager:
             self.show_files()
         else:
             pass
+
+
+    def filter_files(self, value):
+        if value=="extensions...":
+            self.show_files()
+        else:
+            for file in self.files:
+                pass
+
+
+
+
+
+
 
     def show(self):
         self.frame.place(relx=0.015, rely=0.015, relwidth=0.97, relheight=0.97)
