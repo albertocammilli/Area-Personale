@@ -7,8 +7,7 @@ from pathlib import Path
 import sys
 import string
 import os
-
-from selenium.webdriver.common.devtools.v147.fetch import continue_request
+from datetime import datetime
 from send2trash import send2trash
 
 ytd = None
@@ -420,25 +419,25 @@ class WordCounter:
     def hide(self):
         self.frame.place_forget()
 
-
+#could maybe add a priority files system
 class FileManager:
     def __init__(self, parent):
         # path of the script
         self.script_dir = Path(__file__).parent
 
-        #files
-        self.files=[]
+        # files
+        self.files = []
 
-        self.filtered_files=[]
+        self.filtered_files = []
 
         # current directory
         self.current = None
 
-        #extentions present
-        self.extensions=set()
+        # extentions present
+        self.extensions = set()
 
-        self.current_search=""
-        self.current_extension="all"
+        self.current_search = ""
+        self.current_extension = "all"
 
         self.path_cartella_personale = self.script_dir / "Personal"
         self.path_cartella_scuola = self.script_dir / "School"
@@ -500,7 +499,6 @@ class FileManager:
             btn.configure(width=140)
         self.filter_options.place(relx=0.015, rely=0.15, anchor="nw")
 
-
         # add file/move
         self.add_button = ctk.CTkButton(self.frame,
                                         text="+",
@@ -513,18 +511,18 @@ class FileManager:
 
         self.add_button.place(relx=0.93, rely=0.87)
 
-        #open directory button
+        # open directory button
         self.directory_button = ctk.CTkButton(self.frame,
-                                        text="open directory",
-                                        fg_color="#424242",
-                                        hover_color="#616161",
-                                        width=40,
-                                        height=30,
-                                        font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"),
-                                        command=lambda: os.startfile(self.current))
+                                              text="open directory",
+                                              fg_color="#424242",
+                                              hover_color="#616161",
+                                              width=40,
+                                              height=30,
+                                              font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"),
+                                              command=lambda: os.startfile(self.current))
         self.directory_button.place(relx=0.02, rely=0.87)
 
-        #refresh
+        # refresh
         self.refresh_button = ctk.CTkButton(self.frame,
                                             text="⟳",
                                             fg_color="#424242",
@@ -536,6 +534,13 @@ class FileManager:
 
         self.refresh_button.place(relx=0.21, rely=0.87)
 
+        #warning of double tap
+        self.double_tap_label=ctk.CTkLabel(self.frame,
+                                           text="Double tap to delete a file",
+                                           font=ctk.CTkFont(family="Tahoma", size=10, slant="roman"),
+                                           fg_color="transparent",)
+        self.double_tap_label.place(relx=0.4, rely=0.87)
+
         # scrollable frame
         self.files_scrollable_frame = ctk.CTkScrollableFrame(self.frame,
                                                              width=560,
@@ -545,11 +550,9 @@ class FileManager:
         self.files_scrollable_frame.grid_columnconfigure(0, weight=1)
         self.files_scrollable_frame.grid_rowconfigure(1, weight=0)
 
-
     def open_file(self, num, selected_list):
         os.startfile(selected_list[num])
         print(num)
-
 
     def change_current(self, value: str):
         if value == "school":
@@ -564,7 +567,7 @@ class FileManager:
         if self.current is not None:
             files = filedialog.askopenfilenames(title="select a file")
             for file in files:
-                file=Path(file)
+                file = Path(file)
                 destinazione = self.current / file.name
                 file.rename(destinazione)
                 self.files.append(file)
@@ -576,10 +579,8 @@ class FileManager:
         self.refresh(text, extension)
 
     def change_extension(self, value):
-        self.current_extension=value
+        self.current_extension = value
         self.refresh(self.current_search, value)
-
-
 
     def show_list(self, selected_list):
         for widget in self.files_scrollable_frame.winfo_children():
@@ -591,23 +592,23 @@ class FileManager:
             label.grid(row=i, column=0, sticky="nw", pady=2, padx=5)
 
             delete_button = ctk.CTkButton(self.files_scrollable_frame,
-                                        text="delete",
-                                        fg_color="#750a02",
-                                        hover_color="#b30c00",
-                                        width=20,
-                                        height=20,
-                                        font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"))
+                                          text="delete",
+                                          fg_color="#750a02",
+                                          hover_color="#b30c00",
+                                          width=20,
+                                          height=20,
+                                          font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"))
             delete_button.grid(row=i, column=1, sticky="", pady=2, padx=5)
-            delete_button.bind("<Double-Button-1>",lambda event, idx=i: self.delete_file(idx, selected_list))
+            delete_button.bind("<Double-Button-1>", lambda event, idx=i: self.delete_file(idx, selected_list))
 
             open_button = ctk.CTkButton(self.files_scrollable_frame,
-                                   text="open",
-                                   fg_color="#b38600",
-                                   hover_color="orange",
-                                   width=40,
-                                   height=20,
-                                   font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"),
-                                   command=lambda idx=i: self.open_file(idx, selected_list))
+                                        text="open",
+                                        fg_color="#b38600",
+                                        hover_color="orange",
+                                        width=40,
+                                        height=20,
+                                        font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"),
+                                        command=lambda idx=i: self.open_file(idx, selected_list))
             open_button.grid(row=i, column=2, sticky="nw", pady=2, padx=5)
 
     def delete_file(self, idx, selected_list):
@@ -627,24 +628,23 @@ class FileManager:
                 self.files.append(file)
                 self.extensions.add(file.suffix)
         self.tags_combobox.configure(values=["all"] + list(self.extensions))
-        #filtering the files
+        # filtering the files
         if search == "" and extension == "all":
             self.show_list(self.files)
         else:
             for file in self.files:
-                    if extension!="all" and extension!=str(file.suffix):
-                        continue
-                    if search.lower() not in file.name.lower() and search!="":
-                        continue
-                    self.filtered_files.append(file)
+                if extension != "all" and extension != str(file.suffix):
+                    continue
+                if search.lower() not in file.name.lower() and search != "":
+                    continue
+                self.filtered_files.append(file)
             self.show_list(self.filtered_files)
-
 
     def show(self):
         self.frame.place(relx=0.015, rely=0.015, relwidth=0.97, relheight=0.97)
 
     def hide(self):
-        self.frame.place_forget()
+        self.frame.place_forget()##
 
 
 class AreaPersonale(ctk.CTk):
