@@ -7,6 +7,8 @@ from pathlib import Path
 import sys
 import string
 import os
+
+from selenium.webdriver.common.devtools.v147.fetch import continue_request
 from send2trash import send2trash
 
 ytd = None
@@ -427,20 +429,16 @@ class FileManager:
         #files
         self.files=[]
 
+        self.filtered_files=[]
+
         # current directory
         self.current = None
 
         #extentions present
         self.extensions=set()
 
-        #filtered files, temporary list
-        self.filtered_files=[]
-
-        #searched values, another sublist
-        self.searched_files=[]
-
-        #last list used, useful for refresh
-        self.last_file_list="all"
+        self.current_search=""
+        self.current_extension="all"
 
         self.path_cartella_personale = self.script_dir / "Personal"
         self.path_cartella_scuola = self.script_dir / "School"
@@ -468,7 +466,7 @@ class FileManager:
             values=["all"] + list(self.extensions),
             font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"),
             width=160,
-            command=self.filter_files
+            command=self.change_extension
         )
         self.tags_combobox.place(relx=1, rely=0.15, anchor="ne")
         self.tags_combobox.set("all")
@@ -547,17 +545,6 @@ class FileManager:
         self.files_scrollable_frame.grid_columnconfigure(0, weight=1)
         self.files_scrollable_frame.grid_rowconfigure(1, weight=0)
 
-    def show_all_files(self):
-        self.files.clear()
-        for i, file in enumerate(self.current.iterdir()):
-            if file.is_file():
-                self.files.append(file)
-                self.extensions.add(file.suffix)
-                print("f{self.files}\n\n")
-        self.tags_combobox.configure(values=["all"]+list(self.extensions))
-        self.show_list(self.files)
-
-
 
     def open_file(self, num, selected_list):
         os.startfile(selected_list[num])
@@ -571,7 +558,7 @@ class FileManager:
             self.current = self.path_cartella_personale
         else:
             self.current = self.path_cartella_altro
-        self.show_all_files()
+        self.refresh(self.current_search, self.current_extension)
 
     def select_file(self):
         if self.current is not None:
@@ -581,37 +568,16 @@ class FileManager:
                 destinazione = self.current / file.name
                 file.rename(destinazione)
                 self.files.append(file)
-            self.show_all_files()
+            self.refresh(self.current_search, self.current_extension)
         else:
             pass
 
-
-    def filter_files(self, value):
-        if value=="all":
-            self.show_all_files()
-        else:
-            self.filtered_files.clear()
-            for file in self.files:
-                if file.suffix == value:
-                    self.filtered_files.append(file)
-                    print(len(self.filtered_files))
-            self.show_list(self.filtered_files)
-            self.last_file_list = "filtered"
-
-
     def search(self, text, extension):
-        self.searched_files.clear()
-        if extension=="all":
-            if text=="":
-                self.show_all_files()
-            else:
-                for file in self.files:
-                    if text in file.name.lower() or text in file.name.upper():
-                        self.searched_files.append(file)
-                    else:
-                        pass
-                self.show_list(self.searched_files)
-                self.last_file_list="searched"
+        self.refresh(text, extension)
+
+    def change_extension(self, value):
+        self.current_extension=value
+        self.refresh(self.current_search, value)
 
 
 
@@ -648,21 +614,30 @@ class FileManager:
         send2trash(str(selected_list[idx]))
         self.files.remove(selected_list[idx])
         try:
-            self.searched_files.remove(selected_list[idx])
             self.filtered_files.remove(selected_list[idx])
         except:
             pass
-        self.refresh()
+        self.refresh(self.current_search, self.current_extension)
 
-    def refresh(self):
-        if self.last_file_list=="all":
-            self.show_all_files()
-        elif self.last_file_list=="filtered":
+    def refresh(self, search, extension):
+        self.files.clear()
+        self.filtered_files.clear()
+        for i, file in enumerate(self.current.iterdir()):
+            if file.is_file():
+                self.files.append(file)
+                self.extensions.add(file.suffix)
+        self.tags_combobox.configure(values=["all"] + list(self.extensions))
+        #filtering the files
+        if search == "" and extension == "all":
+            self.show_list(self.files)
+        else:
+            for file in self.files:
+                    if extension!="all" and extension!=str(file.suffix):
+                        continue
+                    if search.lower() not in file.name.lower() and search!="":
+                        continue
+                    self.filtered_files.append(file)
             self.show_list(self.filtered_files)
-        elif self.last_file_list=="searched":
-            self.show_list(self.searched_files)
-
-
 
 
     def show(self):
