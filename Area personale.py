@@ -7,6 +7,7 @@ from pathlib import Path
 import sys
 import string
 import os
+from send2trash import send2trash
 
 ytd = None
 get_response_ai = None
@@ -435,6 +436,12 @@ class FileManager:
         #filtered files, temporary list
         self.filtered_files=[]
 
+        #searched values, another sublist
+        self.searched_files=[]
+
+        #last list used, useful for refresh
+        self.last_file_list="all"
+
         self.path_cartella_personale = self.script_dir / "Personal"
         self.path_cartella_scuola = self.script_dir / "School"
         self.path_cartella_altro = self.script_dir / "Other"
@@ -455,6 +462,17 @@ class FileManager:
             corner_radius=6
         )
 
+        # tags
+        self.tags_combobox = ctk.CTkComboBox(
+            self.frame,
+            values=["all"] + list(self.extensions),
+            font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"),
+            width=160,
+            command=self.filter_files
+        )
+        self.tags_combobox.place(relx=1, rely=0.15, anchor="ne")
+        self.tags_combobox.set("all")
+
         # searchbar
         self.searchbar = ctk.CTkEntry(self.frame,
                                       width=520,
@@ -468,6 +486,7 @@ class FileManager:
             width=50,
             text="Search",
             font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"),
+            command=lambda: self.search(self.searchbar.get(), self.tags_combobox.get())
 
         )
         self.search_button.place(relx=0.945, rely=0.05, anchor="center")
@@ -483,16 +502,6 @@ class FileManager:
             btn.configure(width=140)
         self.filter_options.place(relx=0.015, rely=0.15, anchor="nw")
 
-        # tags
-        self.tags_combobox = ctk.CTkComboBox(
-            self.frame,
-            values=["all"]+list(self.extensions),
-            font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"),
-            width=160,
-            command=self.filter_files
-        )
-        self.tags_combobox.place(relx=1, rely=0.15, anchor="ne")
-        self.tags_combobox.set("all")
 
         # add file/move
         self.add_button = ctk.CTkButton(self.frame,
@@ -519,13 +528,13 @@ class FileManager:
 
         #refresh
         self.refresh_button = ctk.CTkButton(self.frame,
-                                              text="⟳",
-                                              fg_color="#424242",
-                                              hover_color="#616161",
-                                              width=30,
-                                              height=30,
-                                              font=ctk.CTkFont(family="Tahoma", size=20, slant="roman"),
-                                              command=lambda: self.show_files())
+                                            text="⟳",
+                                            fg_color="#424242",
+                                            hover_color="#616161",
+                                            width=30,
+                                            height=30,
+                                            font=ctk.CTkFont(family="Tahoma", size=20, slant="roman"),
+                                            command=lambda: self.refresh())
 
         self.refresh_button.place(relx=0.21, rely=0.87)
 
@@ -538,39 +547,21 @@ class FileManager:
         self.files_scrollable_frame.grid_columnconfigure(0, weight=1)
         self.files_scrollable_frame.grid_rowconfigure(1, weight=0)
 
-    def show_files(self):
+    def show_all_files(self):
         self.files.clear()
-        for widget in self.files_scrollable_frame.winfo_children():
-            widget.destroy()
-
         for i, file in enumerate(self.current.iterdir()):
             if file.is_file():
-                label = ctk.CTkLabel(self.files_scrollable_frame, text=file.name, anchor="nw", height=20,
-                                     font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"))
-                label.grid(row=i, column=0, sticky="nw", pady=2, padx=5)
-                button = ctk.CTkButton(self.files_scrollable_frame,
-                                       text="open",
-                                       fg_color="#b38600",
-                                       hover_color="orange",
-                                       width=40,
-                                       height=20,
-                                       font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"),
-                                       command=lambda idx=i: self.open_file(idx, False)
-                                       )
-                button.grid(row=i, column=1, sticky="nw", pady=2, padx=5)
                 self.files.append(file)
                 self.extensions.add(file.suffix)
                 print("f{self.files}\n\n")
         self.tags_combobox.configure(values=["all"]+list(self.extensions))
+        self.show_list(self.files)
 
 
 
-    def open_file(self, num, filtered):
-        if not filtered:
-            print(num)
-            os.startfile(self.files[num])
-        else:
-            os.startfile(self.filtered_files[num])
+    def open_file(self, num, selected_list):
+        os.startfile(selected_list[num])
+        print(num)
 
 
     def change_current(self, value: str):
@@ -580,46 +571,96 @@ class FileManager:
             self.current = self.path_cartella_personale
         else:
             self.current = self.path_cartella_altro
-        self.show_files()
+        self.show_all_files()
 
     def select_file(self):
         if self.current is not None:
-            file = Path(filedialog.askopenfilename(title="select a file"))
-            destinazione = self.current / file.name
-            file.rename(destinazione)
-            self.files.append(file)
-            self.show_files()
+            files = filedialog.askopenfilenames(title="select a file")
+            for file in files:
+                file=Path(file)
+                destinazione = self.current / file.name
+                file.rename(destinazione)
+                self.files.append(file)
+            self.show_all_files()
         else:
             pass
 
 
     def filter_files(self, value):
         if value=="all":
-            self.show_files()
+            self.show_all_files()
         else:
             self.filtered_files.clear()
             for file in self.files:
                 if file.suffix == value:
                     self.filtered_files.append(file)
                     print(len(self.filtered_files))
-            for widget in self.files_scrollable_frame.winfo_children():
-                widget.destroy()
+            self.show_list(self.filtered_files)
+            self.last_file_list = "filtered"
 
-            for i, file in enumerate(self.filtered_files):
 
-                    label = ctk.CTkLabel(self.files_scrollable_frame, text=file.name, anchor="nw", height=20,
-                                         font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"))
-                    label.grid(row=i, column=0, sticky="nw", pady=2, padx=5)
-                    button = ctk.CTkButton(self.files_scrollable_frame,
-                                           text="open",
-                                           fg_color="#b38600",
-                                           hover_color="orange",
-                                           width=40,
-                                           height=20,
-                                           font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"),
-                                           command=lambda idx=i: self.open_file(idx, True))
-                    button.grid(row=i, column=1, sticky="nw", pady=2, padx=5)
+    def search(self, text, extension):
+        self.searched_files.clear()
+        if extension=="all":
+            if text=="":
+                self.show_all_files()
+            else:
+                for file in self.files:
+                    if text in file.name.lower() or text in file.name.upper():
+                        self.searched_files.append(file)
+                    else:
+                        pass
+                self.show_list(self.searched_files)
+                self.last_file_list="searched"
 
+
+
+    def show_list(self, selected_list):
+        for widget in self.files_scrollable_frame.winfo_children():
+            widget.destroy()
+
+        for i, file in enumerate(selected_list):
+            label = ctk.CTkLabel(self.files_scrollable_frame, text=file.name, anchor="nw", height=20,
+                                 font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"))
+            label.grid(row=i, column=0, sticky="nw", pady=2, padx=5)
+
+            delete_button = ctk.CTkButton(self.files_scrollable_frame,
+                                        text="delete",
+                                        fg_color="#750a02",
+                                        hover_color="#b30c00",
+                                        width=20,
+                                        height=20,
+                                        font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"))
+            delete_button.grid(row=i, column=1, sticky="", pady=2, padx=5)
+            delete_button.bind("<Double-Button-1>",lambda event, idx=i: self.delete_file(idx, selected_list))
+
+            open_button = ctk.CTkButton(self.files_scrollable_frame,
+                                   text="open",
+                                   fg_color="#b38600",
+                                   hover_color="orange",
+                                   width=40,
+                                   height=20,
+                                   font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"),
+                                   command=lambda idx=i: self.open_file(idx, selected_list))
+            open_button.grid(row=i, column=2, sticky="nw", pady=2, padx=5)
+
+    def delete_file(self, idx, selected_list):
+        send2trash(str(selected_list[idx]))
+        self.files.remove(selected_list[idx])
+        try:
+            self.searched_files.remove(selected_list[idx])
+            self.filtered_files.remove(selected_list[idx])
+        except:
+            pass
+        self.refresh()
+
+    def refresh(self):
+        if self.last_file_list=="all":
+            self.show_all_files()
+        elif self.last_file_list=="filtered":
+            self.show_list(self.filtered_files)
+        elif self.last_file_list=="searched":
+            self.show_list(self.searched_files)
 
 
 
@@ -728,7 +769,7 @@ class AreaPersonale(ctk.CTk):
     def _build_ui(self):
         self.greeting_label = ctk.CTkLabel(
             self,
-            width=296,
+            width=320,
             height=42,
             corner_radius=0,
             border_width=0,
@@ -738,7 +779,7 @@ class AreaPersonale(ctk.CTk):
             cursor='',
             takefocus=False,
             fg_color='transparent',
-            text='Ciao Albe',
+            text=f"Hello, {(Path.home()).name}",
             font_wrap=True,
             justify='left',
             text_color='#ffffff',
@@ -748,11 +789,11 @@ class AreaPersonale(ctk.CTk):
             unified_bind=True,
             font=ctk.CTkFont(family='Century Gothic', size=60, weight="bold", slant="roman"),
         )
-        self.greeting_label.place(x=34, y=10)
+        self.greeting_label.place(x=35, y=10)
 
         self.subtitle_label = ctk.CTkLabel(
             self,
-            width=217,
+            width=300,
             height=25,
             corner_radius=0,
             border_width=0,
@@ -762,9 +803,9 @@ class AreaPersonale(ctk.CTk):
             cursor='',
             takefocus=False,
             fg_color='transparent',
-            text='Cosa facciamo oggi?',
+            text='What are we doing today?',
             font_wrap=True,
-            justify='center',
+            justify='left',
             text_color='#ffffff',
             text_color_disabled='#a0a0a0',
             compound='left',
@@ -772,7 +813,7 @@ class AreaPersonale(ctk.CTk):
             unified_bind=True,
             font=ctk.CTkFont(family='Century Gothic', size=20, weight="normal", slant="roman"),
         )
-        self.subtitle_label.place(x=34, y=81)
+        self.subtitle_label.place(x=24, y=81)
 
         self.frame_1 = ctk.CTkFrame(
             self,
