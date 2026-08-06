@@ -21,8 +21,12 @@ This is a personal/learning project and my first public repo, so expect some rou
 - AI-powered **word count adjuster** — expand or trim a text to hit a target word count while preserving meaning
 - All AI features are powered by the Google **Gemini API**
 
-### 🚧 In progress
-- **File Manager** — search bar, category filters, and tags are in place, but the underlying logic isn't wired up yet
+### ✅ **File manager** (Fast for personal documents)
+- simple and intuitive ui
+- search by extension and words at once
+- sensibly faster than the default windows file manager to scan and open personal documents
+
+
 - **mp4 → mp3** — planned, not yet implemented
 - **Notes** — planned, not yet implemented
 - **Task Manager** — planned, not yet implemented
@@ -35,8 +39,6 @@ This is a personal/learning project and my first public repo, so expect some rou
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp) for video downloads
 - [google-genai](https://pypi.org/project/google-genai/) for AI text tools (Gemini)
 
-## Getting Started
-
 ### Prerequisites
 - Python 3.10+
 - A Google Gemini API key ([get one here](https://ai.google.dev/))
@@ -45,7 +47,7 @@ This is a personal/learning project and my first public repo, so expect some rou
 ### Installation
 
 ```bash
-git clone https://github.com/your-username/area-personale.git
+git clone https://github.com/Alberto Cammilli/area-personale.git
 cd area-personale
 pip install customtkinter pillow yt-dlp google-genai
 ```

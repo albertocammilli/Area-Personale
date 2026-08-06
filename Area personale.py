@@ -23,36 +23,40 @@ class YtDownloader:
 
         self.start = ctk.CTkButton(self.frame,
                                    text="start",
-                                   font=("Roboto", 12),
-                                   corner_radius=10,
-                                   command=self.thread_make)
+                                   corner_radius=5,
+                                   command=self.thread_make,
+                                   width=180,
+                                   height=38,
+                                   font=ctk.CTkFont(family='Tahoma', size=15, weight="normal", slant="roman"),
+                                   fg_color="green")
         self.insert = ctk.CTkLabel(self.frame,
                                    text="Paste your link here. You can add more than one",
                                    font=ctk.CTkFont(family='Tahoma', size=15, weight="normal", slant="roman"))
         self.options = ctk.CTkComboBox(self.frame,
                                        values=["MP4 Video (Best Quality)", "MP4 Video (Low Quality, 720p)"],
-                                       width=200)
+                                       width=350)
         self.text_box = ctk.CTkTextbox(self.frame,
-                                       height=150,
-                                       width=400,
+                                       height=200,
+                                       width=550,
                                        fg_color="#1b1b1b")
         self.input = ctk.CTkTextbox(self.frame,
-                                    height=20,
+                                    height=30,
+                                    width=500,
                                     border_color="#808080",
                                     border_width=1)
         self.add = ctk.CTkButton(self.frame,
                                  text="add",
                                  corner_radius=7,
                                  fg_color="orange",
-                                 width=40,
+                                 width=60,
                                  hover_color="#8B4000",
-                                 command=self.add)
-        self.add.place(relx=0.72, rely=0.25, anchor="center")
-        self.options.place(relx=0.5, rely=0.35, anchor="center")
-        self.start.place(relx=0.5, rely=0.45, anchor="center")
-        self.input.place(relx=0.5, rely=0.25, anchor="center")
-        self.insert.place(relx=0.5, rely=0.15, anchor="center")
-        self.text_box.place(relx=0.5, rely=0.75, anchor="center")
+                                 command=self.add,)
+        self.add.place(relx=0.8, rely=0.25, anchor="center")
+        self.options.place(relx=0.45, rely=0.25, anchor="center")
+        self.start.place(relx=0.5, rely=0.925, anchor="center")
+        self.input.place(relx=0.5, rely=0.15, anchor="center")
+        self.insert.place(relx=0.5, rely=0.05, anchor="center")
+        self.text_box.place(relx=0.5, rely=0.33, anchor="n")
 
         # code variables
         self.quality = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]"
@@ -93,8 +97,7 @@ class YtDownloader:
             self.quality = "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]"
         settings = {"format": self.quality,
                     "outtmpl": os.path.expanduser("~/Downloads/%(title)s.%(ext)s"),
-                    "concurrent_fragment_downloads": 4,
-                    "cookiesfrombrowser": ("chrome",)}
+                    "concurrent_fragment_downloads": 4}
         if self.input.get(1.0, "end") == "\n":
             pass
         else:
@@ -646,6 +649,106 @@ class FileManager:
     def hide(self):
         self.frame.place_forget()##
 
+class Mp3ToMp4:
+    def __init__(self, parent):
+        self.frame = ctk.CTkFrame(
+            parent,
+            fg_color="#1e1e1e",
+            corner_radius=6
+        )
+
+        self.frame.grid_rowconfigure(0, weight=0)
+        self.frame.grid_rowconfigure(1, weight=1)
+        self.frame.grid_rowconfigure(2, weight=0)
+        self.frame.grid_columnconfigure(0, weight=3)  # select files più largo
+        self.frame.grid_columnconfigure(1, weight=1)  # start più stretto
+
+        # header clear all
+        self.clear_all_button = ctk.CTkButton(
+            self.frame,
+            text="Clear All",
+            font=ctk.CTkFont(family="Tahoma", size=12, weight="normal", slant="roman"),
+            height=24,
+            width=80,
+            corner_radius=6,
+            fg_color="transparent",
+            text_color=("gray40", "gray70"),
+            hover_color=("gray80", "gray25"),
+            border_width=1,
+            border_color=("gray70", "gray35"),
+            command=self.clear_all
+        )
+        self.clear_all_button.grid(
+            row=0, column=1, sticky="e", padx=(10, 20), pady=(14, 0)
+        )
+
+        self.scroll_frame = ctk.CTkScrollableFrame(
+            self.frame,
+            corner_radius=10,
+            fg_color=("gray86", "gray17"),
+        )
+        self.scroll_frame.grid(
+            row=1, column=0, columnspan=2,
+            sticky="nsew", padx=20, pady=(8, 12)
+        )
+
+        # --- Bottone "select files" ---
+        self.select_files_button = ctk.CTkButton(
+            self.frame,
+            text="Select Files",
+            font=ctk.CTkFont(family="Tahoma", size=16, weight="normal", slant="roman"),
+            height=48,
+            corner_radius=8,
+            command=self.select_files
+        )
+        self.select_files_button.grid(
+            row=2, column=0, sticky="ew", padx=(20, 10), pady=(0, 20)
+        )
+
+        self.start_button = ctk.CTkButton(
+            self.frame,
+            text="Start",
+            font=ctk.CTkFont(family="Tahoma", size=18, weight="bold", slant="italic"),
+            height=48,
+            corner_radius=8,
+            fg_color="#2FA72F",
+            hover_color="#248024",
+        )
+        self.start_button.grid(
+            row=2, column=1, sticky="ew", padx=(10, 20), pady=(0, 20)
+        )
+
+        self.files=[]
+
+    def select_files(self):
+        files = filedialog.askopenfilenames(title="select a file", filetypes=[("mp4", "*.mp4")])
+        for file in files:
+            if Path(file) not in self.files:
+                file = Path(file)
+                self.files.append(file)
+                self.show_files(self.files)
+            else:
+                pass
+
+    def show_files(self, selected_list):
+        for widget in self.scroll_frame.winfo_children():
+            widget.destroy()
+        for i, file in enumerate(selected_list):
+            label=ctk.CTkLabel(self.scroll_frame, text=f"{i+1})   {str(file.name)}", font=("Tahoma", 13))
+            label.grid(row=i, column=0, sticky="nw",pady=2)
+
+    def clear_all(self):
+        self.files.clear()
+        self.show_files(self.files)
+    # show/hide ui
+
+    def show(self):
+        self.frame.place(relx=0.015, rely=0.015, relwidth=0.97, relheight=0.97)
+
+    def hide(self):
+        self.frame.place_forget()
+
+
 
 class AreaPersonale(ctk.CTk):
     def __init__(self):
@@ -669,6 +772,9 @@ class AreaPersonale(ctk.CTk):
         self.files = FileManager(self.main_frame)
         self.files.hide()
 
+        self.mp3mp4= Mp3ToMp4(self.main_frame)
+        self.mp3mp4.hide()
+
         # binding
         self.yt_downloader_card.bind("<Button-1>", lambda event: self.launch("youtube"))
         self.yt_downloader_label.bind("<Button-1>", lambda event: self.launch("youtube"))
@@ -679,6 +785,9 @@ class AreaPersonale(ctk.CTk):
         self.word_counter_card.bind("<Button-1>", lambda event: self.launch("wordcounter"))
         self.word_counter_label.bind("<Button-1>", lambda event: self.launch("wordcounter"))
 
+        self.mp4mp3_card.bind("<Button-1>", lambda event: self.launch("mp3mp4"))
+        self.mp4mp3_label.bind("<Button-1>", lambda event: self.launch("mp3mp4"))
+
         # hover
         self.make_widget_hover(self.yt_downloader_card, self.yt_downloader_label)
         self.make_widget_hover(self.file_manager_card, self.file_manager_label)
@@ -687,7 +796,10 @@ class AreaPersonale(ctk.CTk):
         self.make_widget_hover(self.notes_card, self.notes_label)
         self.make_widget_hover(self.task_manager_card, self.task_manager_label)
 
-        self.program_map = {"youtube": self.yt, "wordcounter": self.word, "filemanager": self.files}
+        self.program_map = {"youtube": self.yt,
+                            "wordcounter": self.word,
+                            "filemanager": self.files,
+                            "mp3mp4": self.mp3mp4}
 
     # logic
     def launch(self, program):
