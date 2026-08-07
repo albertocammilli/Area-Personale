@@ -804,6 +804,44 @@ class Mp3ToMp4:
     def hide(self):
         self.frame.place_forget()
 
+class Notes:
+    def __init__(self,parent):
+        self.frame = ctk.CTkFrame(
+            parent,
+            fg_color="#1e1e1e",
+            corner_radius=6
+        )
+
+        self.frame.grid_columnconfigure(0, weight=1)
+        self.frame.grid_rowconfigure(1, weight=4)
+        self.frame.grid_rowconfigure(2, weight=1)
+
+        self.searchbar=ctk.CTkEntry(self.frame,
+                                    placeholder_text="search by title, content, date...",
+                                    font=ctk.CTkFont(family="Tahoma", size=12, weight="normal", slant="italic"))
+        self.searchbar.grid(row=0, column=0, sticky="ew", pady=(10, 10), padx=5)
+
+        self.scrollable_frame=ctk.CTkScrollableFrame(self.frame)
+        self.scrollable_frame.grid(row=1, column=0, sticky="nsew", padx=5)
+
+        self.add_button=ctk.CTkButton(self.frame,
+                                      text="+",
+                                      fg_color="green",
+                                      hover_color="#03a600",
+                                      command=self.open_create_window(app))
+        self.add_button.grid(row=2, column=0, sticky="e", padx=5)
+
+    def open_create_window(self, master):
+        window = ctk.CTkToplevel(master=master)
+        window.geometry("400x200")
+        window.title("New window")
+
+
+    def show(self):
+        self.frame.place(relx=0.015, rely=0.015, relwidth=0.97, relheight=0.97)
+
+    def hide(self):
+        self.frame.place_forget()
 
 
 class AreaPersonale(ctk.CTk):
@@ -831,6 +869,9 @@ class AreaPersonale(ctk.CTk):
         self.mp3mp4= Mp3ToMp4(self.main_frame)
         self.mp3mp4.hide()
 
+        self.notes=Notes(self.main_frame)
+        self.notes.hide()
+
         # binding
         self.yt_downloader_card.bind("<Button-1>", lambda event: self.launch("youtube"))
         self.yt_downloader_label.bind("<Button-1>", lambda event: self.launch("youtube"))
@@ -844,6 +885,10 @@ class AreaPersonale(ctk.CTk):
         self.mp4mp3_card.bind("<Button-1>", lambda event: self.launch("mp3mp4"))
         self.mp4mp3_label.bind("<Button-1>", lambda event: self.launch("mp3mp4"))
 
+        self.notes_card.bind("<Button-1>", lambda event: self.launch("notes"))
+        self.notes_label.bind("<Button-1>", lambda event: self.launch("notes"))
+
+
         # hover
         self.make_widget_hover(self.yt_downloader_card, self.yt_downloader_label)
         self.make_widget_hover(self.file_manager_card, self.file_manager_label)
@@ -855,7 +900,8 @@ class AreaPersonale(ctk.CTk):
         self.program_map = {"youtube": self.yt,
                             "wordcounter": self.word,
                             "filemanager": self.files,
-                            "mp3mp4": self.mp3mp4}
+                            "mp3mp4": self.mp3mp4,
+                            "notes": self.notes}
 
     # logic
     def launch(self, program):
