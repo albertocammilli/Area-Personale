@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from customtkinter import CTkFrame, CTkTextbox
+from customtkinter import CTkFrame, CTkTextbox, CTkLabel
 from tkinter import filedialog
 from PIL import Image
 import threading
@@ -533,7 +533,7 @@ class FileManager:
                                             width=30,
                                             height=30,
                                             font=ctk.CTkFont(family="Tahoma", size=20, slant="roman"),
-                                            command=lambda: self.refresh())
+                                            command=lambda: self.refresh(self.current_search, self.current_extension))
 
         self.refresh_button.place(relx=0.21, rely=0.87)
 
@@ -657,6 +657,12 @@ class Mp3ToMp4:
             corner_radius=6
         )
 
+        self.files=[]
+
+        self.selected_folder=Path(Path.home() / "Downloads")
+
+
+
         self.frame.grid_rowconfigure(0, weight=0)
         self.frame.grid_rowconfigure(1, weight=1)
         self.frame.grid_rowconfigure(2, weight=0)
@@ -713,12 +719,41 @@ class Mp3ToMp4:
             corner_radius=8,
             fg_color="#2FA72F",
             hover_color="#248024",
+            command=self.convert_thread
         )
         self.start_button.grid(
             row=2, column=1, sticky="ew", padx=(10, 20), pady=(0, 20)
         )
 
-        self.files=[]
+        self.browse_button = ctk.CTkButton(
+            self.frame,
+            text="Browse...",
+            font=ctk.CTkFont(family="Tahoma", size=12, weight="normal", slant="italic"),
+            height=24,
+            width=60,
+            corner_radius=6,
+            fg_color="transparent",
+            text_color=("gray40", "gray70"),
+            hover_color=("gray80", "gray25"),
+            border_width=1,
+            border_color=("gray70", "gray35"),
+            command=self.change_directory
+        )
+        self.browse_button.grid(
+            row=0, column=0, sticky="w", padx=(20, 20), pady=(14, 0))
+
+        self.dir_label=ctk.CTkLabel(self.frame,
+                                    text=str(self.selected_folder),
+                                    font=ctk.CTkFont(family="Tahoma", size=10, weight="normal", slant="italic"),
+                                    text_color=("gray80", "gray70"),)
+        self.dir_label.grid(row=0, column=0, sticky="w", padx=(100, 20), pady=(14, 0))
+
+
+    def change_directory(self):
+        new_dir=filedialog.askdirectory()
+        self.selected_folder=new_dir
+        self.update_ui()
+
 
     def select_files(self):
         files = filedialog.askopenfilenames(title="select a file", filetypes=[("mp4", "*.mp4")])
@@ -740,7 +775,28 @@ class Mp3ToMp4:
     def clear_all(self):
         self.files.clear()
         self.show_files(self.files)
+
+    def start(self):
+        for file in self.files:
+            try:
+                AudioFileClip(file).write_audiofile(Path(self.selected_folder) / (Path(file).stem + ".mp3"))
+            finally:
+                AudioFileClip(str(file)).close()
+        self.frame.after(0, self.update_ui)
+
+
+
+    def convert_thread(self):
+        self.start_button.configure(state="disabled")
+        threading.Thread(target=self.start, daemon=True).start()
     # show/hide ui
+
+    def update_ui(self):
+        self.start_button.configure(state="normal", text="done✅")
+        self.frame.after(4000, lambda: self.start_button.configure(text="Start"))
+        self.dir_label.configure(text=self.selected_folder)
+
+
 
     def show(self):
         self.frame.place(relx=0.015, rely=0.015, relwidth=0.97, relheight=0.97)
@@ -1139,9 +1195,11 @@ class AreaPersonale(ctk.CTk):
 
 # importing thread
 def import_libraries_heavy():
-    global ytd, get_response_ai, gemini_api
+    global ytd, get_response_ai, gemini_api, AudioFileClip
     import yt_dlp as _ytd
     import gemini_api as _gemini_api
+    from moviepy import AudioFileClip as _AudioFileClip
+    AudioFileClip= _AudioFileClip
     ytd = _ytd
     gemini_api = _gemini_api
     get_response_ai = _gemini_api.get_response_ai
