@@ -828,13 +828,14 @@ class Notes:
                                       text="+",
                                       fg_color="green",
                                       hover_color="#03a600",
-                                      command=self.open_create_window(app))
+                                      command=lambda: self.open_create_window(app))
         self.add_button.grid(row=2, column=0, sticky="e", padx=5)
 
     def open_create_window(self, master):
         window = ctk.CTkToplevel(master=master)
         window.geometry("400x200")
         window.title("New window")
+
 
 
     def show(self):
