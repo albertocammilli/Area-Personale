@@ -1,3 +1,5 @@
+from sys import exception
+
 import customtkinter as ctk
 from customtkinter import CTkFrame, CTkTextbox, CTkLabel
 from tkinter import filedialog
@@ -7,6 +9,7 @@ from pathlib import Path
 import sys
 import string
 import os
+import json
 from datetime import datetime
 from send2trash import send2trash
 
@@ -111,7 +114,6 @@ class YtDownloader:
 
     def hide(self):
         self.frame.place_forget()
-
 
 class WordCounter:
     def __init__(self, parent):
@@ -806,6 +808,10 @@ class Mp3ToMp4:
 
 class Notes:
     def __init__(self,parent):
+
+        self.db = Path(__file__).parent / "notes.json"
+
+
         self.frame = ctk.CTkFrame(
             parent,
             fg_color="#1e1e1e",
@@ -831,10 +837,240 @@ class Notes:
                                       command=lambda: self.open_create_window(app))
         self.add_button.grid(row=2, column=0, sticky="e", padx=5)
 
+        self.show_notes()
+
     def open_create_window(self, master):
         window = ctk.CTkToplevel(master=master)
-        window.geometry("400x200")
-        window.title("New window")
+        window.geometry("420x560")
+        window.title("New note")
+        window.configure(fg_color="#1e1e1e")
+
+        window.grid_columnconfigure(0, weight=1)
+        window.grid_rowconfigure(4, weight=1)  # description
+        window.grid_rowconfigure(6, weight=3)  # content
+
+        label_font = ctk.CTkFont(family="Tahoma", size=12, weight="bold", slant="roman")
+
+        # --- Warning ---
+        self.warning_label = ctk.CTkLabel(
+            window,
+            text="⚠  Fill in at least the title or the content",
+            font=ctk.CTkFont(family="Tahoma", size=12, weight="normal", slant="italic"),
+            text_color="#e0a800",
+            anchor="w"
+        )
+
+        # --- Title ---
+        self.title_label = ctk.CTkLabel(
+            window,
+            text="Title",
+            font=label_font,
+            text_color=("gray40", "gray70"),
+            anchor="w"
+        )
+        self.title_label.grid(row=1, column=0, sticky="ew", padx=20, pady=(18, 4))
+
+        self.title_entry = ctk.CTkEntry(
+            window,
+            placeholder_text="e.g. Shopping list, Chemistry lesson 3...",
+            height=36,
+            corner_radius=6,
+            font=ctk.CTkFont(family="Tahoma", size=13, weight="normal", slant="roman")
+        )
+        self.title_entry.grid(row=2, column=0, sticky="ew", padx=20)
+
+        # --- Description ---
+        self.content_label = ctk.CTkLabel(
+            window,
+            text="Content",
+            font=label_font,
+            text_color=("gray40", "gray70"),
+            anchor="w"
+        )
+        self.content_label.grid(row=3, column=0, sticky="ew", padx=20, pady=(16, 4))
+
+        self.content_textbox = ctk.CTkTextbox(
+            window,
+            fg_color="#1b1b1b",
+            corner_radius=6,
+            height=70,
+            font=ctk.CTkFont(family="Tahoma", size=13, weight="normal", slant="roman")
+        )
+        self.content_textbox.grid(row=4, column=0, sticky="nsew", padx=20)
+
+        self.description_label = ctk.CTkLabel(
+            window,
+            text="Expanded description / extras",
+            font=label_font,
+            text_color=("gray40", "gray70"),
+            anchor="w"
+        )
+        self.description_label.grid(row=5, column=0, sticky="ew", padx=20, pady=(16, 4))
+
+        self.description_textbox = ctk.CTkTextbox(
+            window,
+            fg_color="#1b1b1b",
+            corner_radius=6,
+            height=200,
+            font=ctk.CTkFont(family="Tahoma", size=13, weight="normal", slant="roman")
+        )
+        self.description_textbox.grid(row=6, column=0, sticky="nsew", padx=20)
+
+        self.buttons_frame = ctk.CTkFrame(window, fg_color="transparent")
+        self.buttons_frame.grid(row=7, column=0, sticky="ew", padx=20, pady=(16, 18))
+        self.buttons_frame.grid_columnconfigure(0, weight=1)
+        self.buttons_frame.grid_columnconfigure(1, weight=1)
+
+        self.ai_fill_button = ctk.CTkButton(
+            self.buttons_frame,
+            text="Let AI fill in the rest",
+            font=ctk.CTkFont(family="Tahoma", size=13, weight="normal", slant="italic"),
+            height=32,
+            corner_radius=8,
+            fg_color="transparent",
+            text_color=("gray40", "gray70"),
+            hover_color=("gray80", "gray25"),
+            border_width=1,
+            border_color=("gray70", "gray35"),
+            command=self.on_ai_fill
+        )
+        self.ai_fill_button.grid(row=0, column=0, sticky="ew", padx=(0, 10))
+
+        self.add_note_button = ctk.CTkButton(
+            self.buttons_frame,
+            text="Add",
+            font=ctk.CTkFont(family="Tahoma", size=15, weight="normal", slant="roman"),
+            height=32,
+            corner_radius=8,
+            fg_color="green",
+            hover_color="#2FA72F",
+            command=lambda: self.on_add_note(window)
+        )
+        self.add_note_button.grid(row=0, column=1, sticky="ew", padx=(10, 0))
+
+    def on_ai_fill(self):
+        title = self.title_entry.get()
+        content = self.content_textbox.get("1.0", "end").strip()
+        description = self.description_textbox.get("1.0", "end").strip()
+        if title!="" and content!="" and description!="":
+            self.warning_label.configure(text="all the fields are already filled! ")
+            self.warning_label.grid(row=0, pady=(5,0))
+        else:
+            self.warning_label.forget()
+            self.ai_fill(title, content, description)
+
+    def ai_fill(self, title, content, description):
+        #gen title
+        if title=="":
+            new_title=gemini_api.get_response_ai(f"based on the content of this note: {content}, generate a title for it",
+                                                 "your job is to generate a proper short title based on the context given. if its just a singular word, write it as the title. if it's a link, search it up and see what it's about before generating a title")
+            self.title_entry.insert(0, new_title)
+
+
+    def on_add_note(self, window):
+        title=self.title_entry.get()
+        content=self.content_textbox.get("1.0", "end").strip()
+        description=self.description_textbox.get("1.0", "end").strip()
+        date=datetime.now().isoformat(timespec="seconds")
+        if title!="":
+            self.add_note(title, content, description, date)
+            self.warning_label.grid_forget()
+            window.destroy()
+        elif content != "" and title == "":
+            self.add_note("Untitled note", content, description, date)
+            self.warning_label.grid_forget()
+            window.destroy()
+        else:
+            self.warning_label.grid(row=0, column=0, sticky="ew", padx=20, pady=(14, 0))
+
+
+    def add_note(self, title, content, description,  date=None):
+        max_id=0
+        if date is None:
+            date = datetime.now().isoformat(timespec="seconds")
+        notes=[]
+        try:
+            with open(self.db, encoding="utf-8") as f:
+                notes=json.load(f)
+        except:
+            pass
+        for note in notes:
+            if note["id"]>max_id:
+                max_id=note["id"]
+
+        notes.insert(0,{
+            "id": max_id + 1,
+            "title": title,
+            "content": content,
+            "description": description,
+            "date": date
+        })
+
+        with open(self.db, "w", encoding="utf-8") as f:
+            json.dump(notes, f, ensure_ascii=False, indent=2)
+        self.show_notes()
+
+    def show_notes(self):
+        for widget in self.scrollable_frame.winfo_children():
+            widget.destroy()
+        notes=[]
+
+        self.scrollable_frame.columnconfigure(0, weight=1)
+        notes_sorted = {}
+        try:
+            with open(self.db, encoding="utf-8") as f:
+                notes=json.load(f)
+        except:
+            pass
+        for note in notes:
+            day=note["date"][:10]
+            notes_sorted.setdefault(day, []).append(note)
+
+
+        for i, day in enumerate(notes_sorted):
+            frame=ctk.CTkFrame(self.scrollable_frame,
+                               fg_color="#212121",)
+            frame.grid(row=i, column=0, sticky="ew", pady=5, padx=5, ipady=5)
+            for val, note in enumerate(notes_sorted[day]):
+                frame.columnconfigure(0, weight=1)
+                date_label=ctk.CTkLabel(frame,
+                                        text=day)
+                date_label.grid(row=0, column=0, sticky="ew", padx=15, pady=5)
+                label = ctk.CTkLabel(frame,
+                                     text=note["title"],
+                                     font=ctk.CTkFont(family="Tahoma", size=15, weight="normal", slant="roman"),)
+                label.grid(row=val+1, column=0, sticky="w", pady=2, padx=30)
+
+                open_button=ctk.CTkButton(frame,
+                                          fg_color="yellow",
+                                          text="open",
+                                          width=40,
+                                          command=lambda binded_note=notes_sorted[day][val]: self.open_note(binded_note),
+                                          font=ctk.CTkFont(family="Tahoma", size=15, weight="normal", slant="roman"))
+                open_button.grid(row=val+1, column=1, sticky="e", padx=10, pady=2)
+
+    def open_note(self, note):
+        self.open_create_window(app)
+        self.add_note_button.destroy()
+        self.ai_fill_button.destroy()
+        self.title_entry.insert(0, note["title"])
+        self.content_textbox.insert("1.0", note["content"])
+        self.description_textbox.insert("1.0", note["description"])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -843,7 +1079,6 @@ class Notes:
 
     def hide(self):
         self.frame.place_forget()
-
 
 class AreaPersonale(ctk.CTk):
     def __init__(self):

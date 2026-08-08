@@ -7,9 +7,10 @@ client = genai.Client()
 def get_response_ai(prompt, param, parent_widget=None):
     try:
         response = client.models.generate_content(
-            model='gemini-3.5-flash-lite',
+            model='gemini-3.1-flash-lite',
             contents=prompt,
-            config=types.GenerateContentConfig(system_instruction=param),
+            config=types.GenerateContentConfig(system_instruction=param,
+                                               tools=[types.Tool(google_search=types.GoogleSearch())]),
         )
         return response.text
     except errors.APIError as e:
