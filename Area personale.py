@@ -959,12 +959,24 @@ class Notes:
             self.warning_label.forget()
             self.ai_fill(title, content, description)
 
+
     def ai_fill(self, title, content, description):
+        self.ai_fill_button.configure(state="disabled")
         #gen title
         if title=="":
-            new_title=gemini_api.get_response_ai(f"based on the content of this note: {content}, generate a title for it",
-                                                 "your job is to generate a proper short title based on the context given. if its just a singular word, write it as the title. if it's a link, search it up and see what it's about before generating a title")
+            new_title=gemini_api.get_response_ai(f"based on the content of this note: {content+" "+description}, generate a title for it",
+                                                 "your job is to generate a proper short title based on the context given. if its just a singular word, write it as the title. if it's a link, search it up and see what it's about before generating a title. output ONLY the text")
             self.title_entry.insert(0, new_title)
+        if content=="":
+            new_content = gemini_api.get_response_ai(
+                f"based on the content of this note: {title + "\n\n" + description}, generate its content. mind you this has to be a very brief summary of the note.",
+                "your job is to generate proper short content based on the context of the note given. output ONLY the text")
+            self.content_textbox.insert("1.0", new_content)
+        if description=="":
+            new_description = gemini_api.get_response_ai(
+                f"based on the content of this note: {title + "\n\n" + content}, generate its description. This is the place of the note that houses the most detailed description.",
+                "your job is to generate proper short content based on the context of the note given. output ONLY the text")
+            self.description_textbox.insert("1.0", new_description)
 
 
     def on_add_note(self, window):

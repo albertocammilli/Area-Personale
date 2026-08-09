@@ -10,8 +10,8 @@ def get_response_ai(prompt, param, parent_widget=None):
             model='gemini-3.1-flash-lite',
             contents=prompt,
             config=types.GenerateContentConfig(system_instruction=param,
-                                               tools=[types.Tool(google_search=types.GoogleSearch())]),
-        )
+                                               tools=[types.Tool(url_context=types.UrlContext())],
+        ))
         return response.text
     except errors.APIError as e:
 
