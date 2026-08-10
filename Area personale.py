@@ -914,7 +914,7 @@ class Notes:
             height=200,
             font=ctk.CTkFont(family="Tahoma", size=13, weight="normal", slant="roman")
         )
-        self.description_textbox.grid(row=6, column=0, sticky="nsew", padx=20)
+        self.description_textbox.grid(row=6, column=0, sticky="nsew", padx=20, pady=(0, 10))
 
         self.buttons_frame = ctk.CTkFrame(window, fg_color="transparent")
         self.buttons_frame.grid(row=7, column=0, sticky="ew", padx=20, pady=(16, 18))
@@ -948,6 +948,16 @@ class Notes:
         )
         self.add_note_button.grid(row=0, column=1, sticky="ew", padx=(10, 0))
 
+        self.delete_note_button = ctk.CTkButton(
+            self.buttons_frame,
+            text="Delete",
+            font=ctk.CTkFont(family="Tahoma", size=15, weight="normal", slant="roman"),
+            height=32,
+            corner_radius=8,
+            fg_color="red",
+            hover_color="#FF4D4D",
+            command=None)
+
     def on_ai_fill(self):
         title = self.title_entry.get()
         content = self.content_textbox.get("1.0", "end").strip()
@@ -957,27 +967,36 @@ class Notes:
             self.warning_label.grid(row=0, pady=(5,0))
         else:
             self.warning_label.forget()
-            self.ai_fill(title, content, description)
+            threading.Thread(target=lambda: self.ai_fill(title, content, description), daemon=True).start()
+            self.ai_fill_button.configure(state="disabled")
 
 
     def ai_fill(self, title, content, description):
-        self.ai_fill_button.configure(state="disabled")
+        new_title=title
+        new_content=content
+        new_description=description
         #gen title
         if title=="":
             new_title=gemini_api.get_response_ai(f"based on the content of this note: {content+" "+description}, generate a title for it",
                                                  "your job is to generate a proper short title based on the context given. if its just a singular word, write it as the title. if it's a link, search it up and see what it's about before generating a title. output ONLY the text")
-            self.title_entry.insert(0, new_title)
         if content=="":
             new_content = gemini_api.get_response_ai(
                 f"based on the content of this note: {title + "\n\n" + description}, generate its content. mind you this has to be a very brief summary of the note.",
                 "your job is to generate proper short content based on the context of the note given. output ONLY the text")
-            self.content_textbox.insert("1.0", new_content)
         if description=="":
             new_description = gemini_api.get_response_ai(
                 f"based on the content of this note: {title + "\n\n" + content}, generate its description. This is the place of the note that houses the most detailed description.",
                 "your job is to generate proper short content based on the context of the note given. output ONLY the text")
-            self.description_textbox.insert("1.0", new_description)
+        self.update_ui(new_title, new_content, new_description)
 
+    def update_ui(self, new_title, new_content, new_description):
+        self.title_entry.delete(0, "end")
+        self.content_textbox.delete("1.0", "end")
+        self.description_textbox.delete("1.0", "end")
+        self.title_entry.insert(0, new_title)
+        self.content_textbox.insert("1.0", new_content)
+        self.description_textbox.insert("1.0", new_description)
+        self.ai_fill_button.configure(state="normal")
 
     def on_add_note(self, window):
         title=self.title_entry.get()
@@ -1054,7 +1073,8 @@ class Notes:
                 label.grid(row=val+1, column=0, sticky="w", pady=2, padx=30)
 
                 open_button=ctk.CTkButton(frame,
-                                          fg_color="yellow",
+                                          fg_color="#ffa600",
+                                          hover_color="yellow",
                                           text="open",
                                           width=40,
                                           command=lambda binded_note=notes_sorted[day][val]: self.open_note(binded_note),
@@ -1063,12 +1083,49 @@ class Notes:
 
     def open_note(self, note):
         self.open_create_window(app)
-        self.add_note_button.destroy()
-        self.ai_fill_button.destroy()
+        self.add_note_button.configure(text="edit note", fg_color="teal", hover_color="#00A5A5",
+                                       command=lambda:self.edit_note(note["id"],
+                                                                     self.title_entry.get(),
+                                                                     self.content_textbox.get("1.0", "end-1c"),
+                                                                     self.description_textbox.get("1.0", "end-1c")))
+        self.delete_note_button.configure(command = lambda: self.delete_note(note["id"]))
+        self.ai_fill_button.configure(text="AI fill  ")
+        self.buttons_frame.grid_columnconfigure(2, weight=1)
+        self.add_note_button.grid(row=0, column=1, sticky="ew", padx=(10, 10))
+        self.delete_note_button.grid(row=0, column=2, sticky="ew", padx=(10, 0))
         self.title_entry.insert(0, note["title"])
         self.content_textbox.insert("1.0", note["content"])
         self.description_textbox.insert("1.0", note["description"])
 
+    def edit_note(self, note_id, title, content, description):
+        notes=[]
+        note_found=False
+        with open(self.db, encoding="utf-8") as f:
+            notes=json.load(f)
+        for note in notes:
+            if note["id"] == note_id:
+                note["title"]=title
+                note["content"]=content
+                note["description"]=description
+                note_found=True
+                break
+        if note_found:
+            with open(self.db, "w", encoding="utf-8") as f:
+                json.dump(notes, f, ensure_ascii=False, indent=2)
+        else:
+            print("cound not find note")
+        self.show_notes()
+
+    def delete_note(self, note_id):
+        notes = []
+        with open(self.db, encoding="utf-8") as f:
+            notes=json.load(f)
+        for note in notes:
+            if note["id"] == note_id:
+                notes.remove(note)
+        with open(self.db, "w", encoding="utf-8") as f:
+            json.dump(notes, f, ensure_ascii=False, indent=2)
+        self.show_notes()
 
 
 
