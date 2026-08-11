@@ -1,0 +1,4 @@
+Short answer:
+You don't have to. 
+However if you want an almost instant search/filter and you want to store your files in a rapid and organized way this might come in handy.
+Also given how slow and bloated Explorer is, especially on older hardware, this might feel like a nice speed boost.

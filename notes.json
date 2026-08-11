@@ -1,16 +1,23 @@
 [
   {
-    "id": 2,
-    "title": "Open Shop Channel",
-    "content": "https://oscwii.org/",
-    "description": "The Open Shop Channel is an open-source homebrew repository for the Nintendo Wii, providing a centralized library of games, utilities, and media applications. It offers multiple ways to access its content, including the classic Homebrew Browser, the modern LibreShop client, and the cross-platform desktop utility OSCDL.",
-    "date": "2026-08-10T19:01:11"
+    "id": 5,
+    "title": "How to use this tool",
+    "content": "Use this tool to save little text snippets or link you wouldn't bother writing a note for otherwise.",
+    "description": "Let gemini create titles and descriptions so they're ready to go for future blazing-fast consultation.",
+    "date": "2026-08-12T19:54:22"
   },
   {
-    "id": 1,
-    "title": "pusex",
-    "content": "https://www.reddit.com/r/samsunggalaxy/comments/1vi1beq/between_these_two_rumoured_designs_for_the_s27/",
-    "description": "This discussion explores fan-made concept renders for the Samsung Galaxy S27 Ultra, featuring a horizontal camera layout inspired by the Galaxy S10. These designs aim to eliminate camera wobble and better accommodate MagSafe-style magnetic accessories. While the community remains divided on aesthetic preferences—often debating between specific colorways and the camera module layout—the concepts highlight a collective desire for a design refresh that addresses functional issues like device stability.",
-    "date": "2026-08-09T21:24:32"
+    "id": 4,
+    "title": "The nintendo wii",
+    "content": "The Nintendo Wii is a home video game console released in 2006, renowned for its innovative motion-controlled gameplay and broad appeal to casual and non-gamers.",
+    "description": "Released in 2006, the Nintendo Wii is a home video game console that revolutionized gaming through its motion-sensitive controller, the Wii Remote. By emphasizing physical interaction and accessible gameplay, it brought gaming to a broader audience and became one of the best-selling consoles of all time.",
+    "date": "2026-08-11T19:52:05"
+  },
+  {
+    "id": 3,
+    "title": "Alberto Cammilli's GitHub Profile",
+    "content": "https://github.com/albertocammilli",
+    "description": "Alberto Cammilli is a student whose GitHub profile serves as a hub for his coding projects, contributions, and technical expertise.",
+    "date": "2026-08-11T19:51:34"
   }
 ]

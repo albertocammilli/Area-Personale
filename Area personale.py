@@ -424,7 +424,7 @@ class WordCounter:
     def hide(self):
         self.frame.place_forget()
 
-#could maybe add a priority files system
+#could maybe add a priority files system, to revise fixme
 class FileManager:
     def __init__(self, parent):
         # path of the script
@@ -810,6 +810,8 @@ class Notes:
     def __init__(self,parent):
 
         self.db = Path(__file__).parent / "notes.json"
+        self.text_var=ctk.StringVar()
+        self.text_var.trace_add("write", lambda *args:self.search(self.text_var.get()))
 
 
         self.frame = ctk.CTkFrame(
@@ -824,7 +826,8 @@ class Notes:
 
         self.searchbar=ctk.CTkEntry(self.frame,
                                     placeholder_text="search by title, content, date...",
-                                    font=ctk.CTkFont(family="Tahoma", size=12, weight="normal", slant="italic"))
+                                    font=ctk.CTkFont(family="Tahoma", size=12, weight="normal", slant="italic"),
+                                    textvariable=self.text_var)
         self.searchbar.grid(row=0, column=0, sticky="ew", pady=(10, 10), padx=5)
 
         self.scrollable_frame=ctk.CTkScrollableFrame(self.frame)
@@ -1041,18 +1044,18 @@ class Notes:
             json.dump(notes, f, ensure_ascii=False, indent=2)
         self.show_notes()
 
-    def show_notes(self):
+    def show_notes(self, notes=None):
         for widget in self.scrollable_frame.winfo_children():
             widget.destroy()
-        notes=[]
-
         self.scrollable_frame.columnconfigure(0, weight=1)
         notes_sorted = {}
-        try:
-            with open(self.db, encoding="utf-8") as f:
-                notes=json.load(f)
-        except:
-            pass
+        if notes is None:
+            notes=[]
+            try:
+                with open(self.db, encoding="utf-8") as f:
+                    notes=json.load(f)
+            except Exception:
+                pass
         for note in notes:
             day=note["date"][:10]
             notes_sorted.setdefault(day, []).append(note)
@@ -1127,20 +1130,18 @@ class Notes:
             json.dump(notes, f, ensure_ascii=False, indent=2)
         self.show_notes()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    def search(self, text):
+        if not text:
+            self.show_notes()
+            return
+        notes=[]
+        notes_filtered=[]
+        with open(self.db, encoding="utf-8") as f:
+            notes=json.load(f)
+        for note in notes:
+            if text.lower() in note["title"].lower()+note["content"].lower()+note["description"].lower()+note["date"]:
+                notes_filtered.append(note)
+        self.show_notes(notes_filtered)
 
 
     def show(self):
