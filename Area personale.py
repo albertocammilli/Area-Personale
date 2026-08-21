@@ -54,12 +54,16 @@ class YtDownloader:
                                  width=60,
                                  hover_color="#8B4000",
                                  command=self.add,)
-        self.add.place(relx=0.8, rely=0.25, anchor="center")
-        self.options.place(relx=0.45, rely=0.25, anchor="center")
-        self.start.place(relx=0.5, rely=0.925, anchor="center")
-        self.input.place(relx=0.5, rely=0.15, anchor="center")
-        self.insert.place(relx=0.5, rely=0.05, anchor="center")
-        self.text_box.place(relx=0.5, rely=0.33, anchor="n")
+        self.frame.grid_columnconfigure(0, weight=1)
+        self.frame.grid_columnconfigure(1, weight=1)
+        self.frame.grid_rowconfigure(3, weight=1)
+
+        self.insert.grid(row=0, column=0, columnspan=2, pady=(6, 10))
+        self.input.grid(row=1, column=0, columnspan=2, sticky="ew", padx=48, pady=(0, 10))
+        self.options.grid(row=2, column=0, sticky="e", padx=(0, 5), pady=(0, 16))
+        self.add.grid(row=2, column=1, sticky="w", padx=(5, 0), pady=(0, 16))
+        self.text_box.grid(row=3, column=0, columnspan=2, sticky="nsew", padx=23, pady=(0, 16))
+        self.start.grid(row=4, column=0, columnspan=2, pady=(0, 12))
 
         # code variables
         self.quality = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]"
@@ -110,10 +114,10 @@ class YtDownloader:
 
     # show/hide ui
     def show(self):
-        self.frame.place(relx=0.015, rely=0.015, relwidth=0.97, relheight=0.97)
+        self.frame.grid(row=0, column=0, sticky="nsew", padx=9, pady=9)
 
     def hide(self):
-        self.frame.place_forget()
+        self.frame.grid_remove()
 
 class WordCounter:
     def __init__(self, parent):
@@ -187,10 +191,11 @@ class WordCounter:
             width=380,
             height=330
         )
-        self.text_container.place(
-            relx=0.33,
-            rely=0.45,
-            anchor="center"
+        self.frame.grid_columnconfigure(0, weight=3)
+        self.frame.grid_columnconfigure(1, weight=1)
+        self.frame.grid_rowconfigure(1, weight=1)
+        self.text_container.grid(
+            row=0, column=0, rowspan=4, sticky="nsew", padx=(6, 13), pady=(10, 0)
         )
 
         # Count label
@@ -205,10 +210,8 @@ class WordCounter:
             width=197,
             height=100
         )
-        self.count_textbox.place(
-            relx=0.67,
-            rely=0.025,
-            anchor="nw",
+        self.count_textbox.grid(
+            row=0, column=1, columnspan=2, sticky="nsew", pady=(10, 6)
         )
         self.count_textbox.insert("1.0", f"STATS:\n\nCharacters: {self.characters}\nWords: {self.words}")
 
@@ -228,10 +231,8 @@ class WordCounter:
             width=380,
             command=lambda: self.count(self.text_container.get("1.0", "end-1c"))
         )
-        self.count_button.place(
-            relx=0.33,
-            rely=0.935,
-            anchor="center"
+        self.count_button.grid(
+            row=4, column=0, sticky="ew", padx=(6, 13), pady=(10, 5)
         )
 
         self.common_words_textbox = ctk.CTkTextbox(
@@ -244,10 +245,8 @@ class WordCounter:
                 size=14,
             )
         )
-        self.common_words_textbox.place(
-            relx=0.67,
-            rely=0.298,
-            anchor="nw"
+        self.common_words_textbox.grid(
+            row=1, column=1, columnspan=2, sticky="nsew", pady=(0, 8)
         )
 
         self.grammar_fix_button = ctk.CTkButton(
@@ -265,10 +264,8 @@ class WordCounter:
             height=28,
             command=lambda: self.grammar_fix_thread()
         )
-        self.grammar_fix_button.place(
-            relx=0.67,
-            rely=0.815,
-            anchor="nw"
+        self.grammar_fix_button.grid(
+            row=3, column=1, columnspan=2, sticky="ew", pady=(0, 5)
         )
 
         # Reformat button
@@ -287,10 +284,8 @@ class WordCounter:
             height=28,
             command=lambda: self.reformat_thread()
         )
-        self.reformat_button.place(
-            relx=0.67,
-            rely=0.9,
-            anchor="nw"
+        self.reformat_button.grid(
+            row=4, column=1, columnspan=2, sticky="ew", pady=(0, 5)
         )
 
         # word count match button
@@ -309,10 +304,8 @@ class WordCounter:
             height=28,
             command=lambda: self.change_words_number_thread())
 
-        self.change_word_count_button.place(
-            relx=0.67,
-            rely=0.73,
-            anchor="nw"
+        self.change_word_count_button.grid(
+            row=2, column=1, sticky="ew", padx=(0, 4), pady=(0, 5)
         )
 
         self.change_words_entry = ctk.CTkEntry(
@@ -327,10 +320,8 @@ class WordCounter:
                 slant="roman",
             ),
         )
-        self.change_words_entry.place(
-            relx=0.912,
-            rely=0.73,
-            anchor="nw"
+        self.change_words_entry.grid(
+            row=2, column=2, sticky="ew", pady=(0, 5)
         )
 
     def count(self, text):
@@ -419,10 +410,10 @@ class WordCounter:
 
     # show/hide ui
     def show(self):
-        self.frame.place(relx=0.015, rely=0.015, relwidth=0.97, relheight=0.97)
+        self.frame.grid(row=0, column=0, sticky="nsew", padx=9, pady=9)
 
     def hide(self):
-        self.frame.place_forget()
+        self.frame.grid_remove()
 
 #could maybe add a priority files system, to revise fixme
 class FileManager:
@@ -464,6 +455,13 @@ class FileManager:
             corner_radius=6
         )
 
+        self.frame.grid_columnconfigure(0, weight=1)
+        self.frame.grid_rowconfigure(2, weight=1)
+
+        self.bottom_bar = ctk.CTkFrame(self.frame, fg_color="transparent")
+        self.bottom_bar.grid(row=3, column=0, columnspan=2, sticky="ew", padx=6, pady=(0, 5))
+        self.bottom_bar.grid_columnconfigure(2, weight=1)
+
         # tags
         self.tags_combobox = ctk.CTkComboBox(
             self.frame,
@@ -472,15 +470,15 @@ class FileManager:
             width=160,
             command=self.change_extension
         )
-        self.tags_combobox.place(relx=1, rely=0.15, anchor="ne")
+        self.tags_combobox.grid(row=1, column=1, sticky="e", padx=(10, 6), pady=(0, 28))
         self.tags_combobox.set("all")
 
         # searchbar
         self.searchbar = ctk.CTkEntry(self.frame,
-                                      width=520,
+                                      width=200,
                                       placeholder_text="search...",
                                       font=ctk.CTkFont(family='Tahoma', size=15, slant="italic"))
-        self.searchbar.place(relx=0.45, rely=0.05, anchor="center")
+        self.searchbar.grid(row=0, column=0, sticky="ew", padx=(9, 10), pady=(5, 25))
 
         # search button
         self.search_button = ctk.CTkButton(
@@ -491,7 +489,7 @@ class FileManager:
             command=lambda: self.search(self.searchbar.get(), self.tags_combobox.get())
 
         )
-        self.search_button.place(relx=0.945, rely=0.05, anchor="center")
+        self.search_button.grid(row=0, column=1, sticky="e", padx=(10, 6), pady=(5, 25))
 
         # filters
         self.filter_options = ctk.CTkSegmentedButton(
@@ -502,10 +500,10 @@ class FileManager:
         )
         for btn in self.filter_options._buttons_dict.values():
             btn.configure(width=140)
-        self.filter_options.place(relx=0.015, rely=0.15, anchor="nw")
+        self.filter_options.grid(row=1, column=0, sticky="ew", padx=(6, 10), pady=(0, 28))
 
         # add file/move
-        self.add_button = ctk.CTkButton(self.frame,
+        self.add_button = ctk.CTkButton(self.bottom_bar,
                                         text="+",
                                         fg_color="lime",
                                         hover_color="green",
@@ -514,10 +512,10 @@ class FileManager:
                                         font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"),
                                         command=self.select_file)
 
-        self.add_button.place(relx=0.93, rely=0.87)
+        self.add_button.grid(row=0, column=3, sticky="e")
 
         # open directory button
-        self.directory_button = ctk.CTkButton(self.frame,
+        self.directory_button = ctk.CTkButton(self.bottom_bar,
                                               text="open directory",
                                               fg_color="#424242",
                                               hover_color="#616161",
@@ -525,10 +523,10 @@ class FileManager:
                                               height=30,
                                               font=ctk.CTkFont(family="Tahoma", size=15, slant="roman"),
                                               command=lambda: os.startfile(self.current))
-        self.directory_button.place(relx=0.02, rely=0.87)
+        self.directory_button.grid(row=0, column=0, sticky="w")
 
         # refresh
-        self.refresh_button = ctk.CTkButton(self.frame,
+        self.refresh_button = ctk.CTkButton(self.bottom_bar,
                                             text="⟳",
                                             fg_color="#424242",
                                             hover_color="#616161",
@@ -537,20 +535,20 @@ class FileManager:
                                             font=ctk.CTkFont(family="Tahoma", size=20, slant="roman"),
                                             command=lambda: self.refresh(self.current_search, self.current_extension))
 
-        self.refresh_button.place(relx=0.21, rely=0.87)
+        self.refresh_button.grid(row=0, column=1, sticky="w", padx=(10, 0))
 
         #warning of double tap
-        self.double_tap_label=ctk.CTkLabel(self.frame,
+        self.double_tap_label=ctk.CTkLabel(self.bottom_bar,
                                            text="Double tap to delete a file",
                                            font=ctk.CTkFont(family="Tahoma", size=10, slant="roman"),
                                            fg_color="transparent",)
-        self.double_tap_label.place(relx=0.4, rely=0.87)
+        self.double_tap_label.grid(row=0, column=2)
 
         # scrollable frame
         self.files_scrollable_frame = ctk.CTkScrollableFrame(self.frame,
                                                              width=560,
                                                              height=200)
-        self.files_scrollable_frame.place(relx=0.51, rely=0.55, anchor="center")
+        self.files_scrollable_frame.grid(row=2, column=0, columnspan=2, sticky="nsew", padx=14, pady=(0, 24))
 
         self.files_scrollable_frame.grid_columnconfigure(0, weight=1)
         self.files_scrollable_frame.grid_rowconfigure(1, weight=0)
@@ -646,10 +644,10 @@ class FileManager:
             self.show_list(self.filtered_files)
 
     def show(self):
-        self.frame.place(relx=0.015, rely=0.015, relwidth=0.97, relheight=0.97)
+        self.frame.grid(row=0, column=0, sticky="nsew", padx=9, pady=9)
 
     def hide(self):
-        self.frame.place_forget()##
+        self.frame.grid_remove()
 
 class Mp3ToMp4:
     def __init__(self, parent):
@@ -801,10 +799,10 @@ class Mp3ToMp4:
 
 
     def show(self):
-        self.frame.place(relx=0.015, rely=0.015, relwidth=0.97, relheight=0.97)
+        self.frame.grid(row=0, column=0, sticky="nsew", padx=9, pady=9)
 
     def hide(self):
-        self.frame.place_forget()
+        self.frame.grid_remove()
 
 class Notes:
     def __init__(self,parent):
@@ -990,7 +988,7 @@ class Notes:
             new_description = gemini_api.get_response_ai(
                 f"based on the content of this note: {title + "\n\n" + content}, generate its description. This is the place of the note that houses the most detailed description.",
                 "your job is to generate proper short content based on the context of the note given. output ONLY the text")
-        self.update_ui(new_title, new_content, new_description)
+        self.frame.after(0, lambda:self.update_ui(new_title, new_content, new_description))
 
     def update_ui(self, new_title, new_content, new_description):
         self.title_entry.delete(0, "end")
@@ -1145,10 +1143,10 @@ class Notes:
 
 
     def show(self):
-        self.frame.place(relx=0.015, rely=0.015, relwidth=0.97, relheight=0.97)
+        self.frame.grid(row=0, column=0, sticky="nsew", padx=9, pady=9)
 
     def hide(self):
-        self.frame.place_forget()
+        self.frame.grid_remove()
 
 class AreaPersonale(ctk.CTk):
     def __init__(self):
@@ -1157,7 +1155,7 @@ class AreaPersonale(ctk.CTk):
         self.title("AreaPersonale")
         self.geometry("900x600")
         self.configure(fg_color="#0e0e0e")
-        self.resizable(False, False)
+        self.resizable(True, True)
         self._build_ui()
         threading.Thread(target=self._load_images_async, daemon=True).start()
         self.current = ""
@@ -1201,7 +1199,6 @@ class AreaPersonale(ctk.CTk):
         self.make_widget_hover(self.word_counter_card, self.word_counter_label)
         self.make_widget_hover(self.mp4mp3_card, self.mp4mp3_label)
         self.make_widget_hover(self.notes_card, self.notes_label)
-        self.make_widget_hover(self.task_manager_card, self.task_manager_label)
 
         self.program_map = {"youtube": self.yt,
                             "wordcounter": self.word,
@@ -1247,21 +1244,20 @@ class AreaPersonale(ctk.CTk):
                 light_image=Image.open(Path(__file__).resolve().parent / "assets" / "images" / "link.png"),
                 dark_image=Image.open(Path(__file__).resolve().parent / "assets" / "images" / "link.png"),
                 size=(18, 18))
-            img_task = ctk.CTkImage(
-                light_image=Image.open(Path(__file__).resolve().parent / "assets" / "images" / "cpu.png"),
-                dark_image=Image.open(Path(__file__).resolve().parent / "assets" / "images" / "cpu.png"), size=(18, 18))
-
             # Assegna le immagini alle etichette in modo sicuro sul thread principale
             self.after(0, lambda: self.yt_downloader_label.configure(image=img_yt))
             self.after(0, lambda: self.file_manager_label.configure(image=img_file))
             self.after(0, lambda: self.word_counter_label.configure(image=img_word))
             self.after(0, lambda: self.mp4mp3_label.configure(image=img_mp4mp3))
             self.after(0, lambda: self.notes_label.configure(image=img_notes))
-            self.after(0, lambda: self.task_manager_label.configure(image=img_task))
         except Exception as e:
             print(f"Image loading failed: {e}")
 
     def _build_ui(self):
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=3)
+        self.grid_rowconfigure(2, weight=1)
+
         self.greeting_label = ctk.CTkLabel(
             self,
             width=320,
@@ -1284,7 +1280,8 @@ class AreaPersonale(ctk.CTk):
             unified_bind=True,
             font=ctk.CTkFont(family='Century Gothic', size=60, weight="bold", slant="roman"),
         )
-        self.greeting_label.place(x=35, y=10)
+        self.greeting_label.grid(row=0, column=0, columnspan=2, sticky="w",
+                                 padx=(35, 0), pady=(10, 1))
 
         self.subtitle_label = ctk.CTkLabel(
             self,
@@ -1308,7 +1305,8 @@ class AreaPersonale(ctk.CTk):
             unified_bind=True,
             font=ctk.CTkFont(family='Century Gothic', size=20, weight="normal", slant="roman"),
         )
-        self.subtitle_label.place(x=24, y=81)
+        self.subtitle_label.grid(row=1, column=0, columnspan=2, sticky="w",
+                                 padx=(24, 0), pady=(0, 28))
 
         self.frame_1 = ctk.CTkFrame(
             self,
@@ -1319,70 +1317,75 @@ class AreaPersonale(ctk.CTk):
             border_color='#565b5e',
             fg_color='#0e0e0e',
         )
-        self.frame_1.place(x=34, y=134)
+        self.frame_1.grid(row=2, column=0, sticky="nsew", padx=(34, 17), pady=(0, 63))
+        self.frame_1.grid_propagate(False)
+        self.frame_1.grid_columnconfigure(0, weight=1)
+        for row in range(5):
+            self.frame_1.grid_rowconfigure(row, weight=1)
 
         self.yt_downloader_card = ctk.CTkFrame(
             self.frame_1,
+            width=200,
             height=60,
             corner_radius=12,
             border_width=0,
             border_color='#565b5e',
             fg_color='#1e1e1e',
         )
-        self.yt_downloader_card.place(x=7, y=0)
+        self.yt_downloader_card.grid(row=0, column=0, sticky="nsew", padx=(7, 8), pady=(0, 8))
 
         self.file_manager_card = ctk.CTkFrame(
             self.frame_1,
+            width=200,
             height=60,
             corner_radius=12,
             border_width=0,
             border_color='#565b5e',
             fg_color='#1e1e1e',
         )
-        self.file_manager_card.place(x=7, y=68)
+        self.file_manager_card.grid(row=1, column=0, sticky="nsew", padx=(7, 8), pady=(0, 8))
 
         self.word_counter_card = ctk.CTkFrame(
             self.frame_1,
+            width=200,
             height=60,
             corner_radius=12,
             border_width=0,
             border_color='#565b5e',
             fg_color='#1e1e1e',
         )
-        self.word_counter_card.place(x=7, y=136)
+        self.word_counter_card.grid(row=2, column=0, sticky="nsew", padx=(7, 8), pady=(0, 8))
 
         self.mp4mp3_card = ctk.CTkFrame(
             self.frame_1,
+            width=200,
             height=60,
             corner_radius=12,
             border_width=0,
             border_color='#565b5e',
             fg_color='#1e1e1e',
         )
-        self.mp4mp3_card.place(x=7, y=204)
+        self.mp4mp3_card.grid(row=3, column=0, sticky="nsew", padx=(7, 8), pady=(0, 9))
 
         self.notes_card = ctk.CTkFrame(
             self.frame_1,
+            width=200,
             height=60,
             corner_radius=12,
             border_width=0,
             border_color='#565b5e',
             fg_color='#1e1e1e',
         )
-        self.notes_card.place(x=7, y=273)
+        self.notes_card.grid(row=4, column=0, sticky="nsew", padx=(7, 8), pady=(0, 0))
 
-        self.task_manager_card = ctk.CTkFrame(
-            self.frame_1,
-            height=60,
-            corner_radius=12,
-            border_width=0,
-            border_color='#565b5e',
-            fg_color='#1e1e1e',
-        )
-        self.task_manager_card.place(x=7, y=342)
+        for card in (self.yt_downloader_card, self.file_manager_card, self.word_counter_card,
+                     self.mp4mp3_card, self.notes_card):
+            card.grid_propagate(False)
+            card.grid_columnconfigure(0, weight=1)
+            card.grid_rowconfigure(0, weight=1)
 
         self.yt_downloader_label = ctk.CTkLabel(
-            self.frame_1,
+            self.yt_downloader_card,
             width=164,
             corner_radius=0,
             border_width=0,
@@ -1405,10 +1408,10 @@ class AreaPersonale(ctk.CTk):
             font=ctk.CTkFont(family='Tahoma', size=15, weight="bold", slant="roman")
 
         )
-        self.yt_downloader_label.place(x=25, y=16)
+        self.yt_downloader_label.grid(row=0, column=0, sticky="w", padx=(18, 18), pady=16)
 
         self.file_manager_label = ctk.CTkLabel(
-            self.frame_1,
+            self.file_manager_card,
             width=164,
             corner_radius=0,
             border_width=0,
@@ -1431,10 +1434,10 @@ class AreaPersonale(ctk.CTk):
             font=ctk.CTkFont(family='Tahoma', size=15, weight="bold", slant="roman"),
 
         )
-        self.file_manager_label.place(x=25, y=84)
+        self.file_manager_label.grid(row=0, column=0, sticky="w", padx=(18, 18), pady=16)
 
         self.word_counter_label = ctk.CTkLabel(
-            self.frame_1,
+            self.word_counter_card,
             width=164,
             corner_radius=0,
             border_width=0,
@@ -1456,10 +1459,10 @@ class AreaPersonale(ctk.CTk):
             unified_bind=True,
             font=ctk.CTkFont(family='Tahoma', size=15, weight="bold", slant="roman"),
         )
-        self.word_counter_label.place(x=23, y=152)
+        self.word_counter_label.grid(row=0, column=0, sticky="w", padx=(16, 20), pady=16)
 
         self.mp4mp3_label = ctk.CTkLabel(
-            self.frame_1,
+            self.mp4mp3_card,
             width=152,
             corner_radius=0,
             border_width=0,
@@ -1481,10 +1484,10 @@ class AreaPersonale(ctk.CTk):
             unified_bind=True,
             font=ctk.CTkFont(family='Tahoma', size=15, weight="bold", slant="roman"),
         )
-        self.mp4mp3_label.place(x=23, y=220)
+        self.mp4mp3_label.grid(row=0, column=0, sticky="w", padx=(16, 32), pady=16)
 
         self.notes_label = ctk.CTkLabel(
-            self.frame_1,
+            self.notes_card,
             width=164,
             corner_radius=0,
             border_width=0,
@@ -1506,32 +1509,7 @@ class AreaPersonale(ctk.CTk):
             unified_bind=True,
             font=ctk.CTkFont(family='Tahoma', size=15, weight="bold", slant="roman"),
         )
-        self.notes_label.place(x=25, y=289)
-
-        self.task_manager_label = ctk.CTkLabel(
-            self.frame_1,
-            width=167,
-            corner_radius=0,
-            border_width=0,
-            border_color='#565b5e',
-            padx=0,
-            pady=0,
-            cursor='',
-            takefocus=False,
-            fg_color='transparent',
-            bg_color='#1e1e1e',
-            text='  Task manager',
-            font_wrap=True,
-            anchor='w',
-            justify='center',
-            text_color='#ffffff',
-            text_color_disabled='#a0a0a0',
-            compound='left',
-            full_circle=True,
-            unified_bind=True,
-            font=ctk.CTkFont(family='Tahoma', size=15, weight="bold", slant="roman"),
-        )
-        self.task_manager_label.place(x=24, y=358)
+        self.notes_label.grid(row=0, column=0, sticky="w", padx=(18, 18), pady=16)
 
         self.main_frame = ctk.CTkFrame(
             self,
@@ -1542,7 +1520,10 @@ class AreaPersonale(ctk.CTk):
             border_color='#565b5e',
             fg_color='#1e1e1e',
         )
-        self.main_frame.place(x=266, y=134)
+        self.main_frame.grid(row=2, column=1, sticky="nsew", padx=(0, 20), pady=(0, 65))
+        self.main_frame.grid_propagate(False)
+        self.main_frame.grid_rowconfigure(0, weight=1)
+        self.main_frame.grid_columnconfigure(0, weight=1)
 
 
 # importing thread
